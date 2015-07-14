@@ -24,6 +24,7 @@ setup(
     entry_points={
         'aleph.crawlers': [
             'edgar = oocrawlers.edgar:EdgarCrawler',
+            'asx = oocrawlers.asx:ASXCrawler',
             'openoil = oocrawlers.openoil:OpenOilCrawler'
         ]
     },
