@@ -2,6 +2,7 @@ import os
 import tempfile
 import ftplib
 import logging
+import itertools
 from lxml import etree
 
 from aleph.crawlers import Crawler, TagExists
@@ -10,16 +11,17 @@ from aleph.crawlers import Crawler, TagExists
 log = logging.getLogger(__name__)
 
 EDGNS = '{http://www.sec.gov/Archives/edgar}'
-SICS = [1000, 1040, 1090, 1220, 1221,
-        1311, 1381, 1382, 1389, 1400,
-        2911, 2990, 3532, 3533, 5171,
-        5172, 6792]
-
+SICS = [
+    1000, 1040, 1090, 1220, 1221, 1400 # mining
+     ] + [1311, 1381, 1382, 1389
+          ,2911, 2990,3532,3533,5171,5172,6792] # oil
 
 class EdgarCrawler(Crawler):
 
     LABEL = "SEC EDGAR"
     SITE = "http://sec.gov"
+    MONTHS = 100000
+    OFFSET = 40
 
     def monthly_indexes(self):
         ftp = ftplib.FTP('ftp.sec.gov')
@@ -69,7 +71,11 @@ class EdgarCrawler(Crawler):
                     yield url, file_data
 
     def crawl(self):
-        for file_path in self.monthly_indexes():
+        for file_path in itertools.islice(
+                self.monthly_indexes(),
+                self.OFFSET,
+                self.OFFSET + self.MONTHS):
+            logging.info('working on %s' % file_path)
             try:
                 for url, file_data in self.parse_feed(file_path):
                     try:
@@ -79,7 +85,9 @@ class EdgarCrawler(Crawler):
                         self.emit_url(url, title=title,
                                       summary=file_data.get('file_description'),
                                       meta=file_data)
+                        log.info('emitted %s' % url)
                     except TagExists:
+                        log.info('skipping existing tag %s' % url)
                         pass
             except Exception, e:
                 log.error('Monthly set: %r', file_path)

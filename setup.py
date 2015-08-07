@@ -25,7 +25,10 @@ setup(
         'aleph.crawlers': [
             'edgar = oocrawlers.edgar:EdgarCrawler',
             'asx = oocrawlers.asx:ASXCrawler',
-            'openoil = oocrawlers.openoil:OpenOilCrawler'
+            'openoil = oocrawlers.openoil:OpenOilCrawler',
+            'rigzone = oocrawlers.rigzone:RigZoneCrawler',
+            'sedar = oocrawlers.sedar:SedarCrawler',
+            'edgar_oo = oocrawlers.sedar:OOEdgarCrawler',
         ]
     },
     tests_require=[]

@@ -1,3 +1,11 @@
+#
+
+# STatus
+# by company CSV:
+# 0-50: part done
+# 50-1000: part-done
+# 1000+: not started
+
 import re
 import logging
 import requests
@@ -38,6 +46,10 @@ class ASXCrawler(Crawler):
 
     LABEL = "Australian Stock Exchange"
     SITE = "http://www.asx.com.au"
+    MAX_COMPANIES = 10000
+    COMPANY_OFFSET = 10020
+
+    COMPANIES_SCRAPED = 0
 
     def store_announcement(self, data):
         try:
@@ -52,7 +64,9 @@ class ASXCrawler(Crawler):
                                      data.get('announcement_headline'))
             log.info("%s / %s" % (data.get('code'), title))
             self.emit_url(url, title=title, meta=data)
+            logging.info('ading url to queue: %s' % url)
         except TagExists:
+            logging.info('skipping because tag exists -- %s' % url)
             pass
 
     def scrape_announcements(self, data):
@@ -80,6 +94,15 @@ class ASXCrawler(Crawler):
                 self.store_announcement(ann_data)
 
     def scrape_company(self, data):
+        if self.COMPANIES_SCRAPED < self.COMPANY_OFFSET:
+            self.COMPANIES_SCRAPED += 1
+            logging.debug('skipping %s' % data.get('code', 'unknown'))
+            return
+        if self.COMPANIES_SCRAPED > self.MAX_COMPANIES + self.COMPANY_OFFSET:
+            logging.info('finished companies at no. %s' % self.COMPANIES_SCRAPED)
+            return
+        self.COMPANIES_SCRAPED += 1
+        logging.info('scraping %s' % data)
         url = API_URL % data.get('ASX code')
         data.update(requests.get(url).json())
         if 'code' not in data:
@@ -97,15 +120,18 @@ class ASXCrawler(Crawler):
 
         category = slugify(record['gics_industry_group'])
         if category not in ['materials', 'energy']:
+            logging.info('skipping category %s' % category)
             return
 
         self.scrape_announcements(data)
 
     def crawl(self):
+        logging.warn('starting asx crawl')
         res = requests.get(CSV_URL)
         header, body = res.content.split('\r\n\r\n', 1)
         sio = StringIO(body)
-        for row in DictReader(sio):
+        logging.warn('about to start processing asx')
+        for row in list(DictReader(sio)):
             row['source_info'] = header.strip()
             try:
                 self.scrape_company(row)
