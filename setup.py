@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='oocrawlers',
-    version='0.1',
+    version='0.11',
     description="OpenOil crawlers for the aleph system",
     long_description="",
     classifiers=[
@@ -28,7 +28,9 @@ setup(
             'openoil = oocrawlers.openoil:OpenOilCrawler',
             'rigzone = oocrawlers.rigzone:RigZoneCrawler',
             'sedar = oocrawlers.sedar:SedarCrawler',
+            'lse = oocrawlers.lse:LSECrawler',
             'edgar_oo = oocrawlers.sedar:OOEdgarCrawler',
+            'internal_docs = oocrawlers.internaldocs:InternalDocsCrawler',
         ]
     },
     tests_require=[]

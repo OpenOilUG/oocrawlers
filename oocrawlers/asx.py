@@ -1,11 +1,3 @@
-#
-
-# STatus
-# by company CSV:
-# 0-50: part done
-# 50-1000: part-done
-# 1000+: not started
-
 import re
 import logging
 import requests
